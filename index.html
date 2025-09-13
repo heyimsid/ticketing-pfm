@@ -1,55 +1,50 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campus Tickets</title>
-<link rel="stylesheet" href="styles.css">
-<script src="https://www.google.com/search?q=https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Tickets</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 p-4 sm:p-8">
 
-<!-- Main Container -->
-<div class="w-full max-w-4xl mx-auto space-y-8">
-
-    <!-- Header and Navigation -->
+  <div class="w-full max-w-4xl mx-auto space-y-8">
     <header class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-400">Campus Tickets</h1>
-        <div class="flex items-center space-x-4">
-            <nav id="main-nav" class="hidden sm:flex items-center space-x-2 sm:space-x-4">
-                <button id="nav-events" class="py-2 px-3 sm:px-4 rounded-lg font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700">Events</button>
-                <button id="nav-my-tickets" class="py-2 px-3 sm:px-4 rounded-lg font-medium transition-colors text-gray-300 hover:text-white">My Tickets</button>
-                <button id="nav-create-event" class="py-2 px-3 sm:px-4 rounded-lg font-medium transition-colors text-gray-300 hover:text-white">Create Event</button>
-            </nav>
-            <button id="theme-toggle" class="p-2 rounded-full transition-colors bg-gray-800 text-white" aria-label="Toggle dark/light mode">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-            </button>
-        </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-400">Campus Tickets</h1>
+      <div class="flex items-center space-x-4">
+        <nav id="main-nav" class="hidden sm:flex items-center space-x-4">
+          <button id="nav-events" class="nav-btn">Events</button>
+          <button id="nav-my-tickets" class="nav-btn">My Tickets</button>
+          <button id="nav-create-event" class="nav-btn">Create Event</button>
+        </nav>
+        <button id="theme-toggle" class="p-2 rounded-full bg-gray-800 text-white" aria-label="Toggle dark/light mode">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <!-- Dynamic Content Area -->
-    <div id="content-container">
-        <!-- Content will be injected here by JavaScript -->
+    <div id="content-container" class="space-y-6">
+      <!-- Dynamic content goes here -->
     </div>
+  </div>
 
-</div>
-
-<!-- Message Modal -->
-<div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
     <div id="modal-content" class="bg-gray-800 text-white p-8 rounded-xl shadow-2xl max-w-sm w-full space-y-4 text-center">
-        <h3 id="modal-title" class="text-2xl font-bold text-white"></h3>
-        <p id="modal-message" class="text-gray-300"></p>
-        <button id="modal-close" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors hover:bg-indigo-700">OK</button>
+      <h3 id="modal-title" class="text-2xl font-bold text-white"></h3>
+      <p id="modal-message" class="text-gray-300"></p>
+      <button id="modal-close" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700">OK</button>
     </div>
-</div>
+  </div>
 
-<!-- Phone auth reCAPTCHA container -->
-<div id="recaptcha-container"></div>
+  <!-- Firebase reCAPTCHA container -->
+  <div id="recaptcha-container"></div>
 
-<script type="module" src="script.js"></script>
-
+  <!-- JS logic -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
