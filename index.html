@@ -4,50 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Campus Tickets</title>
-  <!-- Tailwind + daisyUI CDN -->
+
+  <!-- Tailwind + daisyUI -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@5.0.0-beta.8/dist/full.css" rel="stylesheet" type="text/css" />
+  <!-- daisyUI via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" />
+
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="bg-base-200 text-base-content min-h-screen">
+<body class="bg-base-200 text-base-content min-h-screen flex flex-col">
 
-  <div class="container mx-auto py-8 px-4 space-y-6">
-
-    <!-- Header & Navigation -->
-    <header class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-      <h1 class="text-4xl font-extrabold text-primary">Campus Tickets</h1>
-      <div class="flex items-center space-x-4">
-        <nav id="main-nav" class="hidden sm:flex space-x-4">
-          <button id="nav-events" class="btn btn-ghost">Events</button>
-          <button id="nav-my-tickets" class="btn btn-ghost">My Tickets</button>
-          <button id="nav-create-event" class="btn btn-ghost">Create Event</button>
-        </nav>
-        <button id="theme-toggle" class="btn btn-square btn-outline">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-        </button>
-      </div>
-    </header>
-
-    <!-- Content Container -->
-    <div id="content-container" class="space-y-6">
-      <!-- JS will render content here -->
+  <!-- Header -->
+  <header class="navbar bg-primary text-primary-content shadow-lg">
+    <div class="navbar-start px-4">
+      <h1 class="text-3xl font-bold">Campus Tickets</h1>
     </div>
+    <div class="navbar-center hidden sm:flex space-x-4">
+      <button id="nav-events" class="btn btn-ghost">Events</button>
+      <button id="nav-my-tickets" class="btn btn-ghost">My Tickets</button>
+      <button id="nav-create-event" class="btn btn-ghost">Create Event</button>
+    </div>
+    <div class="navbar-end pr-4">
+      <button id="theme-toggle" class="btn btn-square btn-outline">
+        <!-- Icon: sun/moon -->
+        <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor">
+          <path id="theme-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </button>
+    </div>
+  </header>
 
-  </div>
+  <!-- Main content -->
+  <main class="flex-grow container mx-auto px-4 py-8 space-y-6" id="content-container">
+    <!-- JS injects here -->
+  </main>
 
   <!-- Modal -->
-  <div id="modal" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box">
-      <h3 id="modal-title" class="font-bold text-lg"></h3>
+  <div id="modal" class="modal">
+    <div class="modal-box relative">
+      <button id="modal-close" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      <h3 id="modal-title" class="text-lg font-bold"></h3>
       <p id="modal-message" class="py-4"></p>
       <div class="modal-action">
-        <button id="modal-close" class="btn btn-primary">OK</button>
+        <button class="btn btn-primary" id="modal-ok">OK</button>
       </div>
     </div>
-    <div class="modal-backdrop"></div>
   </div>
 
   <!-- Firebase reCAPTCHA container -->
