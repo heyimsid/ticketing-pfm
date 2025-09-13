@@ -1,257 +1,240 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, collection, addDoc, onSnapshot, query, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- Fill in your Firebase config here ---
+// --- Firebase config – replace with your own keys ---
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
+  messagingSenderId: "YOUR_MESSAGING_ID",
   appId: "YOUR_APP_ID"
 };
 
-// --- Global state ---
-let app, db, auth, userId;
+// --- State & Global Variables ---
+let auth, db, userId;
 let events = [];
-let userTickets = [];
-let view = 'events';
-let theme = 'dark';
-let confirmationResult = null;
+let tickets = [];
+let view = "events";  // "events", "my-tickets", "create-event"
 
-// --- DOM references ---
-const contentContainer = document.getElementById('content-container');
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modal-title');
-const modalMessage = document.getElementById('modal-message');
-const modalCloseBtn = document.getElementById('modal-close');
-const themeToggle = document.getElementById('theme-toggle');
-const mainNavBtnEvent = document.getElementById('nav-events');
-const mainNavBtnMyTickets = document.getElementById('nav-my-tickets');
-const mainNavBtnCreateEvent = document.getElementById('nav-create-event');
+// DOM refs
+const contentContainer = document.getElementById("content-container");
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modal-title");
+const modalMessage = document.getElementById("modal-message");
+const modalCloseBtn = document.getElementById("modal-close");
+const modalOkBtn = document.getElementById("modal-ok");
+const themeToggleBtn = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
+const navEventsBtn = document.getElementById("nav-events");
+const navMyTicketsBtn = document.getElementById("nav-my-tickets");
+const navCreateEventBtn = document.getElementById("nav-create-event");
 
 // --- Utility functions ---
 function showModal(title, message) {
   modalTitle.textContent = title;
   modalMessage.textContent = message;
-  modal.classList.add('modal-open');
+  modal.classList.add("modal-open");
 }
 
-modalCloseBtn.addEventListener('click', () => {
-  modal.classList.remove('modal-open');
-});
+function hideModal() {
+  modal.classList.remove("modal-open");
+}
 
-// --- Firebase initialization ---
+// Event listeners for modal
+modalCloseBtn.addEventListener("click", hideModal);
+modalOkBtn.addEventListener("click", hideModal);
+
+// --- Firebase init ---
 function initFirebase() {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
+  initializeApp(firebaseConfig);
+  auth = getAuth();
+  db = getFirestore();
 
-  window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-    size: 'invisible'
+  // recaptcha setup if phone auth used
+  window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+    size: "invisible"
   });
 
   onAuthStateChanged(auth, user => {
     if (user) {
       userId = user.uid;
-      loadEvents();
-      loadTickets();
+      listenToEvents();
+      listenToTickets();
       render();
     } else {
-      signInAnonymously(auth).catch(console.error);
+      signInAnonymously(auth).catch(err => console.error("Auth error:", err));
     }
   });
 }
 
-// --- Data loading ---
-function loadEvents() {
-  const eventsRef = collection(db, `artifacts/yourAppId/users/${userId}/events`);
-  onSnapshot(eventsRef, snapshot => {
+// --- Listen data ---
+function listenToEvents() {
+  const eventsCol = collection(db, `events`);  // adjust path
+  onSnapshot(eventsCol, snapshot => {
     events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
   });
 }
 
-function loadTickets() {
-  const ticketsRef = collection(db, `artifacts/yourAppId/users/${userId}/tickets`);
-  onSnapshot(ticketsRef, snapshot => {
-    userTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+function listenToTickets() {
+  const ticketsCol = collection(db, `tickets/${userId}/userTickets`);  // adjust path
+  onSnapshot(ticketsCol, snapshot => {
+    tickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
   });
 }
 
-// --- View rendering ---
-function updateNavButtons() {
-  // Reset classes
-  [mainNavBtnEvent, mainNavBtnMyTickets, mainNavBtnCreateEvent].forEach(btn => {
-    btn.classList.remove('btn-primary');
-    btn.classList.add('btn-ghost');
-  });
-  // Set active
-  if (view === 'events') {
-    mainNavBtnEvent.classList.remove('btn-ghost');
-    mainNavBtnEvent.classList.add('btn-primary');
-  } else if (view === 'my-tickets') {
-    mainNavBtnMyTickets.classList.remove('btn-ghost');
-    mainNavBtnMyTickets.classList.add('btn-primary');
-  } else if (view === 'create-event') {
-    mainNavBtnCreateEvent.classList.remove('btn-ghost');
-    mainNavBtnCreateEvent.classList.add('btn-primary');
-  }
-}
+// --- Navigation / theme toggle ---
+navEventsBtn.addEventListener("click", () => { view = "events"; render(); });
+navMyTicketsBtn.addEventListener("click", () => { view = "my-tickets"; render(); });
+navCreateEventBtn.addEventListener("click", () => { view = "create-event"; render(); });
 
+themeToggleBtn.addEventListener("click", () => {
+  const htmlEl = document.documentElement;
+  const current = htmlEl.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  htmlEl.setAttribute("data-theme", next);
+});
+
+// --- Rendering views ---
 function render() {
-  updateNavButtons();
-
-  if (!userId) {
-    contentContainer.innerHTML = `<div class="text-center py-10"><span class="loading loading-spinner loading-lg"></span></div>`;
-    return;
+  // highlight nav
+  [navEventsBtn, navMyTicketsBtn, navCreateEventBtn].forEach(btn => btn.classList.remove("btn-primary"));
+  if (view === "events") {
+    navEventsBtn.classList.add("btn-primary");
+  } else if (view === "my-tickets") {
+    navMyTicketsBtn.classList.add("btn-primary");
+  } else if (view === "create-event") {
+    navCreateEventBtn.classList.add("btn-primary");
   }
 
-  if (view === 'events') {
+  if (view === "events") {
     renderEvents();
-  } else if (view === 'my-tickets') {
+  } else if (view === "my-tickets") {
     renderTickets();
-  } else if (view === 'create-event') {
+  } else if (view === "create-event") {
     renderCreateEvent();
   }
 }
 
 function renderEvents() {
   if (events.length === 0) {
-    contentContainer.innerHTML = `<p class="text-center text-gray-500 py-10">No events available. Create one to get started!</p>`;
+    contentContainer.innerHTML = `<p class="text-center text-muted">No events available.</p>`;
     return;
   }
-
-  const html = events.map((event, idx) => `
-    <div class="card bg-base-100 shadow-lg transition transform hover:scale-105 fade-in" style="animation-delay: ${idx * 100}ms;">
+  const cards = events.map((ev, idx) => `
+    <div class="card card-hover bg-base-100 shadow-lg fade-in" style="animation-delay: ${idx * 100}ms;">
       <div class="card-body">
-        <h2 class="card-title">${event.name}</h2>
-        <p class="text-sm">${event.date} @ ${event.location}</p>
-        <p class="text-sm opacity-70">${event.description}</p>
+        <h2 class="card-title">${ev.name}</h2>
+        <p class="text-sm opacity-70">${ev.date} • ${ev.location}</p>
+        <p class="mt-2">${ev.description}</p>
         <div class="mt-4 flex justify-between items-center">
-          <span class="font-bold text-lg text-primary">$${event.price.toFixed(2)}</span>
-          <button class="btn btn-primary book-btn" data-id="${event.id}">
-            ${event.ticketsSold >= event.totalTickets ? 'Sold Out' : 'Book Ticket'}
+          <span class="text-lg font-bold text-primary">$${ev.price}</span>
+          <button class="btn btn-primary book-btn" data-id="${ev.id}">
+            ${ev.ticketsSold >= ev.totalTickets ? "Sold Out" : "Book Ticket"}
           </button>
         </div>
       </div>
     </div>
-  `).join('');
+  `).join("");
+  contentContainer.innerHTML = `<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">${cards}</div>`;
 
-  contentContainer.innerHTML = `<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">${html}</div>`;
-
-  document.querySelectorAll('.book-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+  // attach book button events
+  document.querySelectorAll(".book-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
       const id = btn.dataset.id;
-      const evt = events.find(e => e.id === id);
-      if (evt) handleBookTicket(evt);
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+      if (ev.ticketsSold >= ev.totalTickets) {
+        showModal("Oops", "This event is sold out!");
+      } else {
+        bookTicket(ev);
+      }
     });
   });
 }
 
 function renderTickets() {
-  if (userTickets.length === 0) {
-    contentContainer.innerHTML = `<p class="text-center text-gray-500 py-10">You have not booked any tickets yet.</p>`;
+  if (!tickets || tickets.length === 0) {
+    contentContainer.innerHTML = `<p class="text-center text-muted">You have not booked any tickets yet.</p>`;
     return;
   }
-
-  const html = userTickets.map((ticket, idx) => `
-    <div class="card bg-base-100 shadow-lg fade-in" style="animation-delay: ${idx * 100}ms;">
-      <div class="card-body flex justify-between items-center">
-        <div>
-          <h2 class="card-title">${ticket.eventName}</h2>
-          <p class="text-sm opacity-70">Booking ID: ${ticket.id}</p>
-          <p class="text-sm opacity-70">Booked on: ${new Date(ticket.bookingDate).toLocaleDateString()}</p>
-        </div>
-        <span class="font-bold text-lg text-primary">$${ticket.price.toFixed(2)}</span>
+  const cards = tickets.map((tk, idx) => `
+    <div class="card bg-base-100 shadow fade-in" style="animation-delay: ${idx * 100}ms;">
+      <div class="card-body">
+        <h2 class="card-title">${tk.eventName}</h2>
+        <p class="text-sm opacity-70">Booking ID: ${tk.id}</p>
+        <p class="text-sm opacity-70">Booked on: ${new Date(tk.bookingDate).toLocaleDateString()}</p>
+        <span class="badge badge-primary">$${tk.price}</span>
       </div>
     </div>
-  `).join('');
-
-  contentContainer.innerHTML = `<div class="space-y-4">${html}</div>`;
+  `).join("");
+  contentContainer.innerHTML = `<div class="space-y-4">${cards}</div>`;
 }
 
 function renderCreateEvent() {
   contentContainer.innerHTML = `
-    <div class="card bg-base-100 p-6 shadow-lg">
-      <h2 class="text-2xl font-bold mb-4">Create Event</h2>
-      <form id="create-event-form" class="space-y-4">
-        <input type="text" name="event-name" placeholder="Event Name" required class="input input-bordered w-full" />
-        <input type="text" name="event-poster" placeholder="Poster URL (optional)" class="input input-bordered w-full" />
-        <textarea name="event-description" placeholder="Description" class="textarea textarea-bordered w-full" rows="3"></textarea>
-        <input type="date" name="event-date" required class="input input-bordered w-full" />
-        <input type="text" name="event-location" placeholder="Location" required class="input input-bordered w-full" />
-        <input type="number" name="event-price" placeholder="Ticket Price" required step="0.01" class="input input-bordered w-full" />
-        <input type="number" name="event-tickets" placeholder="Total Tickets" required class="input input-bordered w-full" />
+    <div class="card bg-base-100 shadow-lg p-6">
+      <h2 class="text-2xl font-bold mb-4">Create New Event</h2>
+      <form id="create-form" class="space-y-4">
+        <input type="text" name="name" placeholder="Event Name" required class="input input-bordered w-full" />
+        <input type="text" name="location" placeholder="Location" required class="input input-bordered w-full" />
+        <input type="date" name="date" required class="input input-bordered w-full" />
+        <textarea name="description" placeholder="Description" class="textarea textarea-bordered w-full"></textarea>
+        <input type="number" name="price" placeholder="Ticket Price" required class="input input-bordered w-full" />
+        <input type="number" name="totalTickets" placeholder="Total Tickets" required class="input input-bordered w-full" />
         <button type="submit" class="btn btn-primary w-full">Create Event</button>
       </form>
     </div>
   `;
 
-  const form = document.getElementById('create-event-form');
-  form.addEventListener('submit', async (e) => {
+  document.getElementById("create-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = e.target.elements;
-    const eventData = {
-      name: f['event-name'].value,
-      poster: f['event-poster'].value || '',
-      description: f['event-description'].value,
-      date: f['event-date'].value,
-      location: f['event-location'].value,
-      price: parseFloat(f['event-price'].value),
-      totalTickets: parseInt(f['event-tickets'].value),
-      ticketsSold: 0,
-      creatorId: userId
+    const newEv = {
+      name: f.name.value,
+      location: f.location.value,
+      date: f.date.value,
+      description: f.description.value,
+      price: parseFloat(f.price.value),
+      totalTickets: parseInt(f.totalTickets.value),
+      ticketsSold: 0
     };
     try {
-      await addDoc(collection(db, `artifacts/yourAppId/users/${userId}/events`), eventData);
-      showModal("Success", `Event "${eventData.name}" created successfully!`);
-      view = 'events';
+      await addDoc(collection(db, `events`), newEv);
+      showModal("Success", `Event "${newEv.name}" created!`);
+      view = "events";
       render();
-    } catch(err) {
-      console.error(err);
+    } catch (err) {
+      console.error("Error:", err);
       showModal("Error", "Failed to create event.");
     }
   });
 }
 
-async function handleBookTicket(evt) {
-  if (!evt) return;
-  if (evt.ticketsSold >= evt.totalTickets) {
-    showModal("Oops", "This event is sold out!");
-    return;
-  }
+async function bookTicket(ev) {
   try {
-    const ticketData = {
-      eventId: evt.id,
-      eventName: evt.name,
-      price: evt.price,
-      bookingDate: (new Date()).toISOString(),
-      userId: userId
-    };
-    await addDoc(collection(db, `artifacts/yourAppId/users/${userId}/tickets`), ticketData);
-    const eventDoc = doc(db, `artifacts/yourAppId/users/${userId}/events`, evt.id);
-    await updateDoc(eventDoc, { ticketsSold: (evt.ticketsSold || 0) + 1 });
-    showModal("Booked!", `Your ticket for "${evt.name}" is confirmed.`);
-  } catch(err) {
-    console.error(err);
-    showModal("Error", "Unable to book ticket.");
+    // example: add to user’s tickets
+    const ticketsRef = collection(db, `tickets/${userId}/userTickets`);
+    await addDoc(ticketsRef, {
+      eventId: ev.id,
+      eventName: ev.name,
+      bookingDate: new Date().toISOString(),
+      price: ev.price
+    });
+    // increment tickets sold in event
+    const evDoc = doc(db, `events`, ev.id);
+    await updateDoc(evDoc, { ticketsSold: (ev.ticketsSold || 0) + 1 });
+    showModal("Booked!", `You booked "${ev.name}"`);
+  } catch (err) {
+    console.error("Book error:", err);
+    showModal("Error", "Unable to book.");
   }
 }
 
-// --- Navigation & theme toggle ---
-themeToggle.addEventListener('click', () => {
-  theme = theme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', theme);
-});
-
-mainNavBtnEvent.addEventListener('click', () => { view = 'events'; render(); });
-mainNavBtnMyTickets.addEventListener('click', () => { view = 'my-tickets'; render(); });
-mainNavBtnCreateEvent.addEventListener('click', () => { view = 'create-event'; render(); });
-
-// --- Initialize ---
-window.addEventListener('DOMContentLoaded', () => {
+// --- Startup ---
+window.addEventListener("DOMContentLoaded", () => {
   initFirebase();
 });
