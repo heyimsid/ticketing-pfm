@@ -5,7 +5,6 @@ font-family: 'Inter', sans-serif;
 transition: background-color 0.3s, color 0.3s;
 }
 
-/* Dark Mode /
 .dark-mode {
 background-color: #0F172A;
 color: #E2E8F0;
