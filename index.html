@@ -1,61 +1,126 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="synthwave">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Campus Tickets</title>
-
-  <!-- Tailwind + daisyUI -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Mindblowing Event</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- daisyUI via CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
-  <link rel="stylesheet" href="styles.css" />
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Floating labels animation */
+    .form-control input:focus + label,
+    .form-control input:not(:placeholder-shown) + label {
+      transform: translateY(-1.5rem);
+      font-size: 0.75rem;
+      color: #fb7185; /* Pink-400 */
+      font-weight: 600;
+    }
+
+    /* Smooth shadow transition on card hover */
+    .event-card:hover {
+      box-shadow: 0 10px 25px rgba(251, 113, 133, 0.8);
+      transform: translateY(-8px);
+      transition: all 0.3s ease;
+    }
+  </style>
 </head>
-<body class="bg-base-200 text-base-content min-h-screen flex flex-col">
+<body class="min-h-screen bg-gradient-to-r from-purple-900 via-pink-700 to-red-600 text-white flex flex-col items-center p-6">
 
-  <!-- Header -->
-  <header class="navbar bg-primary text-primary-content shadow-lg">
-    <div class="navbar-start px-4">
-      <h1 class="text-3xl font-bold">Campus Tickets</h1>
-    </div>
-    <div class="navbar-center hidden sm:flex space-x-4">
-      <button id="nav-events" class="btn btn-ghost">Events</button>
-      <button id="nav-my-tickets" class="btn btn-ghost">My Tickets</button>
-      <button id="nav-create-event" class="btn btn-ghost">Create Event</button>
-    </div>
-    <div class="navbar-end pr-4">
-      <button id="theme-toggle" class="btn btn-square btn-outline">
-        <!-- Icon: sun/moon -->
-        <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-          viewBox="0 0 24 24" stroke="currentColor">
-          <path id="theme-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      </button>
-    </div>
+  <header class="mb-10 text-center max-w-3xl">
+    <h1 class="text-5xl font-extrabold mb-3 drop-shadow-lg">Create Your <span class="text-pink-400">Mindblowing</span> Event</h1>
+    <p class="text-lg opacity-80">Enter the details below and unleash your event’s magic!</p>
   </header>
 
-  <!-- Main content -->
-  <main class="flex-grow container mx-auto px-4 py-8 space-y-6" id="content-container">
-    <!-- JS injects here -->
+  <main class="bg-gradient-to-tr from-pink-900 to-purple-800 rounded-xl shadow-xl p-8 w-full max-w-3xl">
+    <form id="eventForm" class="space-y-8" autocomplete="off" novalidate>
+      <div class="form-control relative">
+        <input type="text" id="eventName" name="eventName" placeholder=" " required
+          class="input input-bordered w-full bg-purple-900 text-white focus:ring-pink-400 focus:border-pink-400 peer" />
+        <label for="eventName" class="absolute left-3 top-3 text-gray-300 cursor-text select-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base">Event Name</label>
+        <p class="text-pink-300 mt-1 hidden" id="eventNameError">Please enter an event name.</p>
+      </div>
+
+      <div class="form-control relative">
+        <input type="date" id="eventDate" name="eventDate" placeholder=" " required
+          class="input input-bordered w-full bg-purple-900 text-white focus:ring-pink-400 focus:border-pink-400 peer" />
+        <label for="eventDate" class="absolute left-3 top-3 text-gray-300 cursor-text select-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base">Event Date</label>
+        <p class="text-pink-300 mt-1 hidden" id="eventDateError">Please select a valid date.</p>
+      </div>
+
+      <div class="form-control relative">
+        <textarea id="eventDesc" name="eventDesc" rows="4" placeholder=" " required
+          class="textarea textarea-bordered w-full bg-purple-900 text-white focus:ring-pink-400 focus:border-pink-400 peer resize-none"></textarea>
+        <label for="eventDesc" class="absolute left-3 top-3 text-gray-300 cursor-text select-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base">Event Description</label>
+        <p class="text-pink-300 mt-1 hidden" id="eventDescError">Please add a description.</p>
+      </div>
+
+      <button type="submit"
+        class="btn btn-lg bg-pink-500 hover:bg-pink-600 text-white w-full shadow-lg transform transition-transform hover:scale-105">Create Event</button>
+    </form>
   </main>
 
-  <!-- Modal -->
-  <div id="modal" class="modal">
-    <div class="modal-box relative">
-      <button id="modal-close" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-      <h3 id="modal-title" class="text-lg font-bold"></h3>
-      <p id="modal-message" class="py-4"></p>
-      <div class="modal-action">
-        <button class="btn btn-primary" id="modal-ok">OK</button>
-      </div>
+  <section id="eventListSection" class="mt-12 w-full max-w-3xl">
+    <h2 class="text-3xl font-bold mb-6 border-b border-pink-400 pb-2">Upcoming Events</h2>
+    <div id="eventList" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <!-- Event cards will appear here -->
     </div>
-  </div>
+  </section>
 
-  <!-- Firebase reCAPTCHA container -->
-  <div id="recaptcha-container"></div>
+  <script>
+    const form = document.getElementById('eventForm');
+    const eventList = document.getElementById('eventList');
 
-  <script type="module" src="script.js"></script>
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      // Clear previous errors
+      ['eventNameError', 'eventDateError', 'eventDescError'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+
+      // Validation
+      const name = form.eventName.value.trim();
+      const date = form.eventDate.value;
+      const desc = form.eventDesc.value.trim();
+      let valid = true;
+
+      if (!name) {
+        document.getElementById('eventNameError').style.display = 'block';
+        valid = false;
+      }
+      if (!date) {
+        document.getElementById('eventDateError').style.display = 'block';
+        valid = false;
+      }
+      if (!desc) {
+        document.getElementById('eventDescError').style.display = 'block';
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // Create event card element
+      const card = document.createElement('div');
+      card.className = 'event-card bg-gradient-to-tr from-pink-600 to-purple-700 rounded-lg p-6 shadow-md cursor-pointer transform transition hover:scale-105 hover:shadow-lg';
+      card.innerHTML = `
+        <h3 class="text-xl font-semibold mb-2">${name}</h3>
+        <p class="text-sm opacity-70 mb-3">${new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+        <p>${desc}</p>
+      `;
+
+      eventList.prepend(card);
+
+      // Reset form with subtle animation
+      form.reset();
+      form.querySelectorAll('input, textarea').forEach(input => input.blur());
+    });
+  </script>
+
 </body>
 </html>
